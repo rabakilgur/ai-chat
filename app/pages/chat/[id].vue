@@ -1,19 +1,21 @@
 <script setup lang="ts">
-import { Chat } from '@ai-sdk/vue'
-import { DefaultChatTransport } from 'ai'
-import type { UIMessage } from 'ai'
+import { Chat } from "@ai-sdk/vue";
+import type { UIMessage } from "ai";
+import { DefaultChatTransport } from "ai";
 
-const route = useRoute()
-const toast = useToast()
-const { model } = useModels()
-const { csrf, headerName } = useCsrf()
+const route = useRoute();
+const toast = useToast();
+const { model } = useModels();
+const { csrf, headerName } = useCsrf();
 
 const { data } = await useFetch(`/api/chats/${route.params.id}`, {
-  cache: 'force-cache'
-})
+  cache: "force-cache",
+});
 
-const isOwner = computed(() => data.value?.isOwner ?? false)
-const visibility = ref<'public' | 'private'>(data.value?.visibility ?? 'private')
+const isOwner = computed(() => data.value?.isOwner ?? false);
+const visibility = ref<"public" | "private">(
+  data.value?.visibility ?? "private",
+);
 
 const {
   dropzoneRef,
@@ -23,14 +25,17 @@ const {
   uploading,
   uploadedFiles,
   removeFile,
-  clearFiles
-} = useFileUploadWithStatus(route.params.id as string)
+  clearFiles,
+} = useFileUploadWithStatus(route.params.id as string);
 
-const { data: votes } = await useLazyFetch(`/api/chats/${route.params.id}/votes`, {
-  immediate: isOwner.value
-})
+const { data: votes } = await useLazyFetch(
+  `/api/chats/${route.params.id}/votes`,
+  {
+    immediate: isOwner.value,
+  },
+);
 
-const input = ref('')
+const input = ref("");
 
 const chat = new Chat({
   id: data.value?.id,
@@ -39,115 +44,130 @@ const chat = new Chat({
     api: `/api/chats/${data.value?.id}`,
     headers: { [headerName]: csrf },
     body: {
-      model: model.value
-    }
+      model: model.value,
+    },
   }),
   onData: (dataPart) => {
-    if (dataPart.type === 'data-chat-title') {
-      refreshNuxtData('chats')
+    if (dataPart.type === "data-chat-title") {
+      refreshNuxtData("chats");
     }
   },
   onError(error) {
-    const { message } = typeof error.message === 'string' && error.message[0] === '{' ? JSON.parse(error.message) : error
+    const { message } =
+      typeof error.message === "string" && error.message[0] === "{"
+        ? JSON.parse(error.message)
+        : error;
     toast.add({
       description: message,
-      icon: 'i-lucide-alert-circle',
-      color: 'error',
-      duration: 0
-    })
-  }
-})
+      icon: "i-lucide-alert-circle",
+      color: "error",
+      duration: 0,
+    });
+  },
+});
 
 async function handleSubmit(e: Event) {
-  e.preventDefault()
+  e.preventDefault();
   if (input.value.trim() && !uploading.value) {
     chat.sendMessage({
       text: input.value,
-      files: uploadedFiles.value.length > 0 ? uploadedFiles.value : undefined
-    })
-    input.value = ''
-    clearFiles()
+      files: uploadedFiles.value.length > 0 ? uploadedFiles.value : undefined,
+    });
+    input.value = "";
+    clearFiles();
   }
 }
 
-const editingMessageId = ref<string | null>(null)
+const editingMessageId = ref<string | null>(null);
 
 function startEdit(message: UIMessage) {
-  if (editingMessageId.value) return
+  if (editingMessageId.value) return;
 
-  editingMessageId.value = message.id
+  editingMessageId.value = message.id;
 }
 
 async function saveEdit(message: UIMessage, text: string) {
   try {
     await $fetch(`/api/chats/${data.value!.id}/messages`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: { [headerName]: csrf },
-      body: { messageId: message.id, type: 'edit' }
-    })
+      body: { messageId: message.id, type: "edit" },
+    });
   } catch {
-    toast.add({ description: 'Failed to save edit.', icon: 'i-lucide-alert-circle', color: 'error' })
-    return
+    toast.add({
+      description: "Failed to save edit.",
+      icon: "i-lucide-alert-circle",
+      color: "error",
+    });
+    return;
   }
 
-  editingMessageId.value = null
-  chat.sendMessage({ text, messageId: message.id })
+  editingMessageId.value = null;
+  chat.sendMessage({ text, messageId: message.id });
 }
 
 async function regenerateMessage(message: UIMessage) {
   try {
     await $fetch(`/api/chats/${data.value!.id}/messages`, {
-      method: 'DELETE',
+      method: "DELETE",
       headers: { [headerName]: csrf },
-      body: { messageId: message.id, type: 'regenerate' }
-    })
+      body: { messageId: message.id, type: "regenerate" },
+    });
   } catch {
-    toast.add({ description: 'Failed to regenerate.', icon: 'i-lucide-alert-circle', color: 'error' })
-    return
+    toast.add({
+      description: "Failed to regenerate.",
+      icon: "i-lucide-alert-circle",
+      color: "error",
+    });
+    return;
   }
 
-  chat.regenerate({ messageId: message.id })
+  chat.regenerate({ messageId: message.id });
 }
 
 function getVote(messageId: string) {
-  const vote = votes.value?.find(v => v.messageId === messageId)
-  if (!vote) return null
-  return !!vote.isUpvoted
+  const vote = votes.value?.find((v) => v.messageId === messageId);
+  if (!vote) return null;
+  return !!vote.isUpvoted;
 }
 
 async function vote(message: UIMessage, isUpvoted: boolean) {
-  const snapshot = (votes.value ?? []).map(v => ({ ...v }))
-  const toggling = getVote(message.id) === isUpvoted
-  const next = toggling ? null : isUpvoted
+  const snapshot = (votes.value ?? []).map((v) => ({ ...v }));
+  const toggling = getVote(message.id) === isUpvoted;
+  const next = toggling ? null : isUpvoted;
 
-  votes.value = next === null
-    ? (votes.value ?? []).filter(v => v.messageId !== message.id)
-    : [
-        ...(votes.value ?? []).filter(v => v.messageId !== message.id),
-        { chatId: data.value!.id, messageId: message.id, isUpvoted: next }
-      ]
+  votes.value =
+    next === null
+      ? (votes.value ?? []).filter((v) => v.messageId !== message.id)
+      : [
+          ...(votes.value ?? []).filter((v) => v.messageId !== message.id),
+          { chatId: data.value!.id, messageId: message.id, isUpvoted: next },
+        ];
 
   try {
     await $fetch(`/api/chats/${data.value!.id}/votes`, {
-      method: 'POST',
+      method: "POST",
       headers: { [headerName]: csrf },
-      body: next === null ? { messageId: message.id } : { messageId: message.id, isUpvoted: next }
-    })
+      body:
+        next === null
+          ? { messageId: message.id }
+          : { messageId: message.id, isUpvoted: next },
+    });
   } catch {
-    votes.value = snapshot
+    votes.value = snapshot;
     toast.add({
-      description: 'Failed to save vote',
-      icon: 'i-lucide-alert-circle',
-      color: 'error'
-    })
+      description: "Failed to save vote",
+      icon: "i-lucide-alert-circle",
+      color: "error",
+    });
   }
 }
 
 onMounted(() => {
   if (isOwner.value && data.value?.messages.length === 1) {
-    chat.regenerate()
+    chat.regenerate();
   }
-})
+});
 </script>
 
 <template>
@@ -211,7 +231,10 @@ onMounted(() => {
             <template v-if="isOwner" #actions="{ message }">
               <ChatMessageActions
                 :message="message"
-                :streaming="chat.status === 'streaming' && message.id === chat.messages[chat.messages.length - 1]?.id"
+                :streaming="
+                  chat.status === 'streaming' &&
+                  message.id === chat.messages[chat.messages.length - 1]?.id
+                "
                 :editing="editingMessageId === message.id"
                 :vote="getVote(message.id)"
                 @vote="(_message, isUpvoted) => vote(_message, isUpvoted)"
@@ -258,6 +281,9 @@ onMounted(() => {
   </UDashboardPanel>
 
   <UContainer v-else class="flex-1 flex flex-col gap-4 sm:gap-6">
-    <UError :error="{ statusMessage: 'Chat not found', statusCode: 404 }" class="min-h-full" />
+    <UError
+      :error="{ statusMessage: 'Chat not found', statusCode: 404 }"
+      class="min-h-full"
+    />
   </UContainer>
 </template>

@@ -1,52 +1,54 @@
 <script setup lang="ts">
-import type { AvatarProps } from '@nuxt/ui'
-import { AnimatePresence, Motion } from 'motion-v'
+import type { AvatarProps } from "@nuxt/ui";
+import { AnimatePresence, Motion } from "motion-v";
 
 interface ChatFilePreviewProps {
-  name: string
-  type: string
-  previewUrl?: string
-  size?: AvatarProps['size']
-  status?: 'idle' | 'uploading' | 'uploaded' | 'error'
-  error?: string
-  removable?: boolean
+  name: string;
+  type: string;
+  previewUrl?: string;
+  size?: AvatarProps["size"];
+  status?: "idle" | "uploading" | "uploaded" | "error";
+  error?: string;
+  removable?: boolean;
 }
 
 const props = withDefaults(defineProps<ChatFilePreviewProps>(), {
-  status: 'idle',
+  status: "idle",
   removable: false,
-  size: '2xl'
-})
+  size: "2xl",
+});
 
 const emit = defineEmits<{
-  remove: []
-}>()
+  remove: [];
+}>();
 
-const open = ref(false)
+const open = ref(false);
 
-const isZoomable = computed(() => props.type.startsWith('image/') && props.previewUrl)
+const isZoomable = computed(
+  () => props.type.startsWith("image/") && props.previewUrl,
+);
 
 function openZoom() {
   if (isZoomable.value) {
-    open.value = true
+    open.value = true;
   }
 }
 
 function closeZoom() {
-  open.value = false
+  open.value = false;
 }
 
 defineShortcuts({
-  escape: closeZoom
-})
+  escape: closeZoom,
+});
 
 onMounted(() => {
-  window.addEventListener('scroll', closeZoom, true)
-})
+  window.addEventListener("scroll", closeZoom, true);
+});
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', closeZoom, true)
-})
+  window.removeEventListener("scroll", closeZoom, true);
+});
 </script>
 
 <template>
@@ -59,7 +61,7 @@ onUnmounted(() => {
         class="rounded-lg"
         :class="{
           'opacity-50': status === 'uploading',
-          'cursor-zoom-in': isZoomable
+          'cursor-zoom-in': isZoomable,
         }"
         @click="openZoom"
       />
@@ -73,7 +75,9 @@ onUnmounted(() => {
     </div>
 
     <UTooltip v-if="status === 'error'" :text="error">
-      <div class="absolute inset-0 flex items-center justify-center bg-error/50 rounded-lg">
+      <div
+        class="absolute inset-0 flex items-center justify-center bg-error/50 rounded-lg"
+      >
         <UIcon name="i-lucide-alert-circle" class="size-6 text-white" />
       </div>
     </UTooltip>
@@ -102,7 +106,12 @@ onUnmounted(() => {
             :initial="{ opacity: 0, scale: 0.9 }"
             :animate="{ opacity: 1, scale: 1 }"
             :exit="{ opacity: 0, scale: 0.9 }"
-            :transition="{ type: 'spring', bounce: 0.15, duration: 0.5, ease: 'easeInOut' }"
+            :transition="{
+              type: 'spring',
+              bounce: 0.15,
+              duration: 0.5,
+              ease: 'easeInOut',
+            }"
             class="absolute inset-0 flex items-center justify-center cursor-zoom-out"
             @click="closeZoom"
           >
@@ -110,7 +119,7 @@ onUnmounted(() => {
               :src="previewUrl"
               :alt="removeRandomSuffix(name)"
               class="max-w-[95vw] max-h-[95vh] object-contain rounded-md"
-            >
+            />
           </Motion>
         </div>
       </AnimatePresence>

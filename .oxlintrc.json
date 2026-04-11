@@ -1,0 +1,14 @@
+{
+  "ignorePatterns": [".*/**/*", "node_modules/**/*", "dist/**/*"],
+  "rules": {
+    "no-async-promise-executor": "off",
+    "no-unused-vars": [
+      "warn",
+      {
+        "varsIgnorePattern": "^_",
+        "argsIgnorePattern": "^_",
+        "caughtErrors": "none"
+      }
+    ]
+  }
+}

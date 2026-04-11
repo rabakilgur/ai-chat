@@ -1,79 +1,85 @@
 <script setup lang="ts">
-import { useClipboard } from '@vueuse/core'
+import { useClipboard } from "@vueuse/core";
 
 const props = defineProps<{
-  chatId: string
-  visibility: 'public' | 'private'
-}>()
+  chatId: string;
+  visibility: "public" | "private";
+}>();
 
 const emit = defineEmits<{
-  'update:visibility': [visibility: 'public' | 'private']
-}>()
+  "update:visibility": [visibility: "public" | "private"];
+}>();
 
-const toast = useToast()
-const { csrf, headerName } = useCsrf()
-const clipboard = useClipboard()
+const toast = useToast();
+const { csrf, headerName } = useCsrf();
+const clipboard = useClipboard();
 
-const loading = ref(false)
+const loading = ref(false);
 
-const isShared = computed(() => props.visibility === 'public')
-const shareUrl = computed(() => `${window.location.origin}/chat/${props.chatId}`)
+const isShared = computed(() => props.visibility === "public");
+const shareUrl = computed(
+  () => `${window.location.origin}/chat/${props.chatId}`,
+);
 
 const options = [
   {
-    value: 'private' as const,
-    label: 'Keep private',
-    description: 'Only you have access',
-    icon: 'i-lucide-lock'
+    value: "private" as const,
+    label: "Keep private",
+    description: "Only you have access",
+    icon: "i-lucide-lock",
   },
   {
-    value: 'public' as const,
-    label: 'Shared',
-    description: 'Anyone with the link can view',
-    icon: 'i-lucide-globe'
-  }
-]
+    value: "public" as const,
+    label: "Shared",
+    description: "Anyone with the link can view",
+    icon: "i-lucide-globe",
+  },
+];
 
-async function updateVisibility(value: 'public' | 'private') {
-  if (value === props.visibility) return
+async function updateVisibility(value: "public" | "private") {
+  if (value === props.visibility) return;
 
-  loading.value = true
-  const previous = props.visibility
-  emit('update:visibility', value)
+  loading.value = true;
+  const previous = props.visibility;
+  emit("update:visibility", value);
 
   try {
     await $fetch(`/api/chats/${props.chatId}/visibility`, {
-      method: 'PATCH',
+      method: "PATCH",
       headers: { [headerName]: csrf },
-      body: { visibility: value }
-    })
+      body: { visibility: value },
+    });
   } catch {
-    emit('update:visibility', previous)
+    emit("update:visibility", previous);
     toast.add({
-      description: 'Failed to update visibility',
-      icon: 'i-lucide-alert-circle',
-      color: 'error'
-    })
+      description: "Failed to update visibility",
+      icon: "i-lucide-alert-circle",
+      color: "error",
+    });
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-const copied = ref(false)
+const copied = ref(false);
 
 function copyLink() {
-  clipboard.copy(shareUrl.value)
-  copied.value = true
+  clipboard.copy(shareUrl.value);
+  copied.value = true;
   setTimeout(() => {
-    copied.value = false
-  }, 2000)
+    copied.value = false;
+  }, 2000);
 }
 </script>
 
 <template>
   <UModal
     :title="isShared ? 'Chat shared' : 'Share chat'"
-    :description="isShared ? 'Anyone with the link can view this chat.' : 'Only you can view this chat.'"
+    :description="
+      isShared
+        ? 'Anyone with the link can view this chat.'
+        : 'Only you can view this chat.'
+    "
     close
   >
     <UTooltip text="Share chat">
@@ -114,8 +120,15 @@ function copyLink() {
         </button>
       </div>
 
-      <div v-if="isShared" class="flex items-center gap-2 rounded-lg ring ring-default px-2 py-1.5 mt-4">
-        <a :href="shareUrl" target="_blank" class="flex-1 truncate text-sm text-muted pl-1">
+      <div
+        v-if="isShared"
+        class="flex items-center gap-2 rounded-lg ring ring-default px-2 py-1.5 mt-4"
+      >
+        <a
+          :href="shareUrl"
+          target="_blank"
+          class="flex-1 truncate text-sm text-muted pl-1"
+        >
           {{ shareUrl }}
         </a>
 

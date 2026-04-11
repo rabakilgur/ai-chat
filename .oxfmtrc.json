@@ -1,0 +1,16 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "ignorePatterns": [],
+  "experimentalTailwindcss": {
+    "stylesheet": "./app/assets/tailwind.css",
+    "attributes": [
+      "class",
+      ":class",
+      "className",
+      "row-class",
+      ":row-class",
+      "inner-class",
+      ":inner-class"
+    ]
+  }
+}
