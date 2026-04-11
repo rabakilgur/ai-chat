@@ -69,7 +69,10 @@ const chat = new Chat({
       } catch {
         message = error.message;
       }
-    } else if (typeof error.message === "string" && error.message.trim().length > 0) {
+    } else if (
+      typeof error.message === "string" &&
+      error.message.trim().length > 0
+    ) {
       message = error.message;
     }
     toast.add({
@@ -190,7 +193,7 @@ onMounted(() => {
     v-if="data?.id"
     id="chat"
     class="relative min-h-0"
-    :ui="{ body: 'p-0 sm:p-0 overscroll-none' }"
+    :ui="{ body: 'p-0 sm:p-0 overscroll-none scrollbar-custom' }"
   >
     <template #header>
       <Navbar>
