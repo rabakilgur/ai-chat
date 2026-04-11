@@ -1,7 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
   modules: [
-    "@nuxt/eslint",
     "@nuxt/ui",
     "@comark/nuxt",
     "@nuxthub/core",
@@ -36,15 +35,6 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: ["striptags", "motion-v"],
-    },
-  },
-
-  eslint: {
-    config: {
-      stylistic: {
-        commaDangle: "never",
-        braceStyle: "1tbs",
-      },
     },
   },
 });

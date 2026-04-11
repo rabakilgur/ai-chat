@@ -12,12 +12,22 @@ const emit = defineEmits<{
   save: [message: UIMessage, text: string];
   cancelEdit: [];
 }>();
+
+function getPartKey(messageId: string, part: UIMessage["parts"][number], index: number) {
+  if (isToolUIPart(part)) {
+    const output =
+      typeof part.output === "object" && part.output !== null ? (part.output as object) : null;
+    const outputSizeHint = output ? Object.keys(output).length : 0;
+    return `${messageId}-${part.type}-${index}-${part.state}-${part.toolCallId}-${outputSizeHint}`;
+  }
+  return `${messageId}-${part.type}-${index}`;
+}
 </script>
 
 <template>
   <template
     v-for="(part, index) in getMergedParts(message.parts)"
-    :key="`${message.id}-${part.type}-${index}`"
+    :key="getPartKey(message.id, part, index)"
   >
     <UChatReasoning
       v-if="isReasoningUIPart(part)"
@@ -36,6 +46,10 @@ const emit = defineEmits<{
       <ChatToolWeather
         v-else-if="getToolName(part) === 'weather'"
         :invocation="{ ...(part as WeatherUIToolInvocation) }"
+      />
+      <ChatToolImageGeneration
+        v-else-if="getToolName(part) === 'image_generation'"
+        :part="part"
       />
       <UChatTool
         v-else-if="

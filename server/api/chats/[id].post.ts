@@ -1,22 +1,44 @@
 import type { AnthropicLanguageModelOptions } from "@ai-sdk/anthropic";
 import { anthropic } from "@ai-sdk/anthropic";
 import type { GoogleLanguageModelOptions } from "@ai-sdk/google";
+import { google } from "@ai-sdk/google";
 import type { UIMessage } from "ai";
 import {
   convertToModelMessages,
   createUIMessageStream,
   createUIMessageStreamResponse,
+  generateImage,
   generateText,
   smoothStream,
   stepCountIs,
   streamText,
+  tool,
 } from "ai";
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "hub:db";
 import { z } from "zod";
-// import { google } from '@ai-sdk/google'
-import type { OpenAILanguageModelResponsesOptions } from "@ai-sdk/openai";
-import { openai } from "@ai-sdk/openai";
+
+const imageGenerationTool = tool({
+  description: "Generate an image based on a text description. Use this when the user asks you to create, generate, draw, or make an image or picture.",
+  inputSchema: z.object({
+    prompt: z.string().describe("Detailed text description of the image to generate"),
+  }),
+  execute: async ({ prompt }) => {
+    try {
+      const { image } = await generateImage({
+        model: "openai/gpt-image-1",
+        prompt,
+      });
+      return {
+        result: image.base64,
+        mediaType: image.mediaType ?? "image/png",
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Unknown image generation error";
+      throw new Error(`Image generation failed: ${message}`);
+    }
+  },
+});
 
 defineRouteMeta({
   openAPI: {
@@ -120,12 +142,11 @@ export default defineEventHandler(async (event) => {
         tools: {
           chart: chartTool,
           weather: weatherTool,
+          image_generation: imageGenerationTool,
           ...(model.startsWith("anthropic/") && {
             web_search: anthropic.tools.webSearch_20250305(),
           }),
-          ...(model.startsWith("openai/") && { web_search: openai.tools.webSearch() }),
-          // TODO: enable once AI SDK supports combining provider-defined tools with custom tools
-          // ...(model.startsWith('google/') && { google_search: google.tools.googleSearch({}) })
+          ...(model.startsWith("google/") && { google_search: google.tools.googleSearch({}) }),
         },
         providerOptions: {
           anthropic: {
@@ -140,12 +161,18 @@ export default defineEventHandler(async (event) => {
               thinkingLevel: "low",
             },
           } satisfies GoogleLanguageModelOptions,
-          openai: {
-            reasoningEffort: "low",
-            reasoningSummary: "detailed",
-          } satisfies OpenAILanguageModelResponsesOptions,
         },
-        stopWhen: stepCountIs(5),
+        stopWhen: [
+          ({ steps }) => {
+            const lastStep = steps[steps.length - 1];
+            if (!lastStep) return false;
+            return lastStep.toolResults.some(
+              (toolResult) =>
+                toolResult !== undefined && toolResult.toolName === "image_generation",
+            );
+          },
+          stepCountIs(5),
+        ],
         experimental_transform: smoothStream(),
       });
 

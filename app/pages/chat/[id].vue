@@ -43,9 +43,9 @@ const chat = new Chat({
   transport: new DefaultChatTransport({
     api: `/api/chats/${data.value?.id}`,
     headers: { [headerName]: csrf },
-    body: {
+    body: () => ({
       model: model.value,
-    },
+    }),
   }),
   onData: (dataPart) => {
     if (dataPart.type === "data-chat-title") {
@@ -53,10 +53,25 @@ const chat = new Chat({
     }
   },
   onError(error) {
-    const { message } =
-      typeof error.message === "string" && error.message[0] === "{"
-        ? JSON.parse(error.message)
-        : error;
+    let message = "Something went wrong.";
+    if (typeof error.message === "string" && error.message[0] === "{") {
+      try {
+        const parsed = JSON.parse(error.message) as {
+          message?: string;
+          statusMessage?: string;
+          error?: { message?: string };
+        };
+        message =
+          parsed.message ??
+          parsed.statusMessage ??
+          parsed.error?.message ??
+          error.message;
+      } catch {
+        message = error.message;
+      }
+    } else if (typeof error.message === "string" && error.message.trim().length > 0) {
+      message = error.message;
+    }
     toast.add({
       description: message,
       icon: "i-lucide-alert-circle",

@@ -45,10 +45,8 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@nuxt/eslint": "^1.15.2",
     "@types/node": "^24.12.2",
     "drizzle-kit": "^0.31.10",
-    "eslint": "^10.2.0",
     "oxfmt": "^0.44.0",
     "oxlint": "^1.59.0",
     "sass": "^1.99.0",

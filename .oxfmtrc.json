@@ -2,7 +2,7 @@
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
   "ignorePatterns": [],
   "experimentalTailwindcss": {
-    "stylesheet": "./app/assets/tailwind.css",
+    "stylesheet": "./app/assets/css/main.css",
     "attributes": [
       "class",
       ":class",
