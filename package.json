@@ -1,5 +1,5 @@
 {
-  "name": "nuxt-ui-template-chat",
+  "name": "ai-chat",
   "private": true,
   "type": "module",
   "scripts": {
@@ -7,11 +7,14 @@
     "dev": "nuxt dev",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
-    "lint": "eslint .",
+    "lint": "oxlint",
+    "format": "oxfmt",
+    "fmt:check": "oxfmt --check",
     "typecheck": "nuxt typecheck",
     "db:generate": "nuxt db generate",
     "db:migrate": "nuxt db migrate"
   },
+  "author": "Robin Garbe <mail@robin-garbe.de>",
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.68",
     "@ai-sdk/gateway": "^3.0.93",
@@ -46,6 +49,9 @@
     "@types/node": "^24.12.2",
     "drizzle-kit": "^0.31.10",
     "eslint": "^10.2.0",
+    "oxfmt": "^0.44.0",
+    "oxlint": "^1.59.0",
+    "sass": "^1.99.0",
     "typescript": "^6.0.2",
     "vue-tsc": "^3.2.6"
   },
