@@ -1,12 +1,17 @@
 <script setup lang="ts">
 import { isToolStreaming } from "@nuxt/ui/utils/ai";
 import type { getToolName } from "ai";
+import ImageLightBox from "./ImageLightBox.vue";
 
 type ToolPart = Parameters<typeof getToolName>[0];
 
 const props = defineProps<{
   part: ToolPart;
 }>();
+
+const prompt = computed(
+  () => (props.part.input as { prompt?: string } | undefined)?.prompt,
+);
 
 const streaming = computed(() => isToolStreaming(props.part));
 const failed = computed(() => props.part.state === "output-error");
@@ -16,7 +21,9 @@ const errorText = computed(() => {
 });
 
 const imageSrc = computed(() => {
-  const output = props.part.output as { result?: string; mediaType?: string } | undefined;
+  const output = props.part.output as
+    | { result?: string; mediaType?: string }
+    | undefined;
   if (!output?.result) return null;
   return `data:${output.mediaType ?? "image/png"};base64,${output.result}`;
 });
@@ -25,11 +32,7 @@ const imageSrc = computed(() => {
 <template>
   <div class="my-5">
     <template v-if="imageSrc">
-      <img
-        :src="imageSrc"
-        alt="AI generated image"
-        class="rounded-xl max-w-full w-auto max-h-[512px] shadow-lg"
-      />
+      <ImageLightBox :src="imageSrc" :alt="prompt || 'Generated image'" />
     </template>
 
     <div
@@ -56,3 +59,5 @@ const imageSrc = computed(() => {
     </div>
   </div>
 </template>
+
+<style lang="css"></style>

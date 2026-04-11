@@ -11,6 +11,10 @@ const props = defineProps<{
   vote: boolean | null;
 }>();
 
+const isImage = computed(() =>
+  props.message.parts.some((part) => part.type === "tool-image_generation"),
+);
+
 const formattedDate = computed(() => {
   if (!props.message.createdAt) return null;
 
@@ -37,24 +41,87 @@ const emit = defineEmits<{
 
 const hasFiles = computed(() => props.message.parts.some(isFileUIPart));
 
+const downloaded = ref(false);
+
+async function download() {
+  const part: any = props.message.parts.find(
+    (part) => part.type === "tool-image_generation",
+  );
+  const output: {
+    mediaType: string;
+    result: string;
+  } = part.output;
+  const imageSrc = `data:${output.mediaType};base64,${output.result}`;
+  const link = document.createElement("a");
+  link.href = imageSrc;
+  link.download = "image.png";
+  link.click();
+
+  downloaded.value = true;
+  setTimeout(() => (downloaded.value = false), 2000);
+}
+
 const clipboard = useClipboard();
 
 const copied = ref(false);
 
-function copy() {
-  clipboard.copy(getTextFromMessage(props.message));
+async function copy() {
+  if (isImage) {
+    const part: any = props.message.parts.find(
+      (part) => part.type === "tool-image_generation",
+    );
+    const output: {
+      mediaType: string;
+      result: string;
+    } = part.output;
+    const imageSrc = `data:${output.mediaType};base64,${output.result}`;
+
+    const canCopyImage =
+      typeof navigator !== "undefined" &&
+      typeof navigator.clipboard?.write === "function" &&
+      typeof ClipboardItem !== "undefined";
+
+    if (canCopyImage) {
+      try {
+        const binary = atob(output.result);
+        const bytes = Uint8Array.from(binary, (char) => char.charCodeAt(0));
+        const blob = new Blob([bytes], { type: output.mediaType });
+
+        await navigator.clipboard.write([
+          new ClipboardItem({
+            [output.mediaType]: blob,
+          }),
+        ]);
+      } catch {
+        await clipboard.copy(imageSrc);
+      }
+    } else {
+      await clipboard.copy(imageSrc);
+    }
+  } else {
+    await clipboard.copy(getTextFromMessage(props.message));
+  }
 
   copied.value = true;
-
-  setTimeout(() => {
-    copied.value = false;
-  }, 2000);
+  setTimeout(() => (copied.value = false), 2000);
 }
 </script>
 
 <template>
   <template v-if="message.role === 'assistant' && !streaming">
-    <UTooltip text="Copy response">
+    <UTooltip v-if="isImage" text="Download image">
+      <UButton
+        size="sm"
+        :color="downloaded ? 'primary' : 'neutral'"
+        variant="ghost"
+        icon="i-lucide-download"
+        aria-label="Download image"
+        class="relative"
+        @click="download"
+      />
+    </UTooltip>
+
+    <UTooltip :text="`Copy ${isImage ? 'image' : 'response'}`">
       <UButton
         size="sm"
         :color="copied ? 'primary' : 'neutral'"

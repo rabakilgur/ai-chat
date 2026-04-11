@@ -94,6 +94,10 @@ const quickChats = [
     label: "Show me a chart of sales data",
     icon: "i-lucide-line-chart",
   },
+  {
+    label: "Generate an image of a green dog with a cowboy hat",
+    icon: "i-lucide-image",
+  },
 ];
 </script>
 
