@@ -66,7 +66,7 @@ const clipboard = useClipboard();
 const copied = ref(false);
 
 async function copy() {
-  if (isImage) {
+  if (isImage.value) {
     const part: any = props.message.parts.find(
       (part) => part.type === "tool-image_generation",
     );
