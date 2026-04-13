@@ -18,3 +18,5 @@ export const MODELS = [
   { label: "GPT-5 Nano", value: "openai/gpt-5-nano", icon: "i-simple-icons-openai" },
   { label: "GPT-5.4 Pro", value: "openai/gpt-5.4-pro", icon: "i-simple-icons-openai" },
 ];
+
+export const MINI_MODEL = "openai/gpt-oss-20b";

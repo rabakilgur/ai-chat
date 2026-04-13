@@ -17,9 +17,11 @@ import {
 import { and, eq } from "drizzle-orm";
 import { db, schema } from "hub:db";
 import { z } from "zod";
+import { MINI_MODEL } from "~~/shared/utils/models";
 
 const imageGenerationTool = tool({
-  description: "Generate an image based on a text description. Use this when the user asks you to create, generate, draw, or make an image or picture.",
+  description:
+    "Generate an image based on a text description. Use this when the user asks you to create, generate, draw, or make an image or picture.",
   inputSchema: z.object({
     prompt: z.string().describe("Detailed text description of the image to generate"),
   }),
@@ -83,7 +85,7 @@ export default defineEventHandler(async (event) => {
 
   if (!chat.title) {
     const { text: title } = await generateText({
-      model: "openai/gpt-4.1-nano",
+      model: MINI_MODEL,
       system: `You are a title generator for a chat:
           - Generate a short title based on the first user's message
           - The title should be less than 30 characters long
