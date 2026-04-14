@@ -41,6 +41,7 @@
     "nuxt-csurf": "^1.6.5",
     "shiki": "^4.0.2",
     "striptags": "3.2.0",
+    "tailwind-animations": "^1.0.1",
     "tailwindcss": "^4.2.2",
     "zod": "^4.3.6"
   },

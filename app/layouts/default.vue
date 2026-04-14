@@ -8,6 +8,11 @@ const { loggedIn, openInPopup } = useUserSession();
 const { csrf, headerName } = useCsrf();
 
 const open = ref(false);
+const INITIALIZING_TITLE_TRACKER = Symbol("initializing-title-tracker");
+const ANIMATION_DURATION_MS = 700;
+const animatedTitleIds = ref(new Set<string>());
+let titleTrackerState: Set<string> | typeof INITIALIZING_TITLE_TRACKER =
+  INITIALIZING_TITLE_TRACKER;
 
 const deleteModal = overlay.create(LazyModalConfirm, {
   props: {
@@ -22,7 +27,7 @@ const { data: chats, refresh: refreshChats } = await useFetch("/api/chats", {
   transform: (data) =>
     data.map((chat) => ({
       id: chat.id,
-      label: chat.title || "Untitled",
+      label: chat.title || "Generating title...",
       to: `/chat/${chat.id}`,
       icon: "i-lucide-message-circle",
       createdAt: chat.createdAt,
@@ -56,10 +61,46 @@ const items = computed(() =>
         ...item,
         slot: "chat" as const,
         icon: undefined,
-        class: item.label === "Untitled" ? "text-muted" : "",
+        isGeneratingTitle: item.label === "Generating title...",
       })),
     ];
   }),
+);
+
+watch(
+  chats,
+  (nextChats) => {
+    if (!nextChats) {
+      return;
+    }
+
+    const generatingNow = new Set(
+      nextChats
+        .filter((chat) => chat.label === "Generating title...")
+        .map((chat) => chat.id),
+    );
+
+    if (titleTrackerState === INITIALIZING_TITLE_TRACKER) {
+      titleTrackerState = generatingNow;
+      return;
+    }
+
+    const previouslyGenerating = titleTrackerState;
+    for (const chat of nextChats) {
+      if (
+        chat.label !== "Generating title..." &&
+        previouslyGenerating.has(chat.id)
+      ) {
+        animatedTitleIds.value.add(chat.id);
+        setTimeout(() => {
+          animatedTitleIds.value.delete(chat.id);
+        }, ANIMATION_DURATION_MS);
+      }
+    }
+
+    titleTrackerState = generatingNow;
+  },
+  { immediate: true },
 );
 
 async function deleteChat(id: string) {
@@ -142,6 +183,26 @@ defineShortcuts({
           orientation="vertical"
           :ui="{ link: 'overflow-hidden' }"
         >
+          <template #chat-label="{ item }">
+            <UChatShimmer
+              v-if="(item as any).isGeneratingTitle"
+              text="Thinking..."
+              class="text-sm"
+            />
+            <div
+              v-else
+              :class="[
+                'max-w-full min-w-0 truncate text-ellipsis',
+                {
+                  'animate-blurred-fade-in animate-duration-500':
+                    animatedTitleIds.has((item as any).id),
+                },
+              ]"
+            >
+              {{ item.label }}
+            </div>
+          </template>
+
           <template #chat-trailing="{ item }">
             <div
               class="flex -mr-1.25 translate-x-full group-hover:translate-x-0 transition-transform"
