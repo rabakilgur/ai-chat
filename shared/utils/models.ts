@@ -15,6 +15,8 @@ export const MODELS = [
     icon: "i-simple-icons-anthropic",
   },
   { label: "Gemini 3 Flash", value: "google/gemini-3-flash", icon: "i-simple-icons-google" },
+  { label: "Nano Banana", value: "google/gemini-2.5-flash-image", icon: "i-simple-icons-google" },
+  { label: "Nano Banana Pro", value: "google/gemini-3-pro-image", icon: "i-simple-icons-google" },
   { label: "GPT-5 Nano", value: "openai/gpt-5-nano", icon: "i-simple-icons-openai" },
   { label: "GPT-5.4 Pro", value: "openai/gpt-5.4-pro", icon: "i-simple-icons-openai" },
 ];
