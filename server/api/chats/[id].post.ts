@@ -10,7 +10,6 @@ import {
   generateImage,
   generateText,
   smoothStream,
-  stepCountIs,
   streamText,
   tool,
 } from "ai";
@@ -28,7 +27,7 @@ const imageGenerationTool = tool({
   execute: async ({ prompt }) => {
     try {
       const { image } = await generateImage({
-        model: "openai/gpt-image-1",
+        model: "google/imagen-4.0-generate-001",
         prompt,
       });
       return {
@@ -164,17 +163,17 @@ export default defineEventHandler(async (event) => {
             },
           } satisfies GoogleLanguageModelOptions,
         },
-        stopWhen: [
-          ({ steps }) => {
-            const lastStep = steps[steps.length - 1];
-            if (!lastStep) return false;
-            return lastStep.toolResults.some(
-              (toolResult) =>
-                toolResult !== undefined && toolResult.toolName === "image_generation",
-            );
-          },
-          stepCountIs(5),
-        ],
+        // stopWhen: [
+        //   ({ steps }) => {
+        //     const lastStep = steps[steps.length - 1];
+        //     if (!lastStep) return false;
+        //     return lastStep.toolResults.some(
+        //       (toolResult) =>
+        //         toolResult !== undefined && toolResult.toolName === "image_generation",
+        //     );
+        //   },
+        //   stepCountIs(5),
+        // ],
         experimental_transform: smoothStream(),
       });
 
